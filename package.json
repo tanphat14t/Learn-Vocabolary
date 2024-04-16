@@ -1,0 +1,32 @@
+{
+  "name": "wordpress-seed",
+  "version": "1.0.0",
+  "description": "Wordpress seed",
+  "scripts": {
+    "gulp-sass": "gulp sass",
+    "gulp-js": "gulp js",
+    "watch": "gulp"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "browserslist": "^4.16.6",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^4.1.0",
+    "gulp-uglify": "^3.0.2"
+  },
+  "browserslist": [
+    "last 4 version"
+  ],
+  "dependencies": {
+    "eslint": "^8.2.0",
+    "gulp-cached": "^1.1.1",
+    "gulp-eslint": "^6.0.0",
+    "gulp-order": "^1.2.0",
+    "gulp-remember": "^1.0.1",
+    "gulp-sourcemaps": "^3.0.0"
+  }
+}

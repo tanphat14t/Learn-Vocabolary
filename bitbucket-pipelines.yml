@@ -1,0 +1,86 @@
+# This is a sample build configuration for JavaScript.
+# Check our guides at https://confluence.atlassian.com/x/14UWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: wordpress:5.8
+
+options:
+  max-time: 10
+
+pipelines:
+  branches:
+    staging:
+      - step:
+          name: Build image
+          script:
+            - apt update
+            - curl -sL https://deb.nodesource.com/setup_14.x | bash -
+            - apt install nodejs -y
+            - npm install
+            - npm run gulp-sass && npm run gulp-js
+            - export DOCKER_IMAGE=$DOCKER_REGISTRY_USER/$BITBUCKET_REPO_SLUG-stag
+            - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+            - docker build -t $DOCKER_IMAGE .
+            - docker push $DOCKER_IMAGE
+          services:
+            - docker
+          caches:
+            - docker
+      - step:
+          name: Deploy to staging
+          deployment: staging
+          script:
+            - apt update && apt install git openssh-client -y
+            - export DOCKER_IMAGE=$DOCKER_REGISTRY_USER/$BITBUCKET_REPO_SLUG-stag
+            - export DOCKER_CONTAINER=$BITBUCKET_REPO_SLUG-stag
+            - git clone git@bitbucket.org:namtech/$BITBUCKET_REPO_SLUG-config.git &&
+              scp $BITBUCKET_REPO_SLUG-config/$BITBUCKET_REPO_SLUG/.env.stag $REMOTE_USER@$REMOTE_ADDRESS:~/.env &&
+              rm -rf $BITBUCKET_REPO_SLUG-config
+            - ssh $REMOTE_USER@$REMOTE_ADDRESS "
+              docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD &&
+              docker pull $DOCKER_IMAGE &&
+              (docker network ls|grep webnet >/dev/null 2>&1 || docker network create --driver bridge webnet) &&
+              (docker stop $DOCKER_CONTAINER || true) && (docker rm $DOCKER_CONTAINER || true) &&
+              docker run -d --name $DOCKER_CONTAINER --env-file .env -v $UPLOAD_DIR:/var/www/html/wp-content/uploads --restart=always --log-opt max-size=10m --network=webnet $DOCKER_IMAGE &&
+              rm .env &&
+              docker system prune -f &&
+              exit;"
+            - ssh $REMOTE_USER@$REMOTE_ADDRESS "docker exec -i $DOCKER_CONTAINER /src/healthcheck-pipeline.sh && exit;"
+    # master:
+    #   - step:
+    #       name: Build image
+    #       script:
+    #         - apt update
+    #         - curl -sL https://deb.nodesource.com/setup_14.x | bash -
+    #         - apt install nodejs -y
+    #         - npm run gulp-sass && npm run gulp-js
+    #         - export DOCKER_IMAGE=$DOCKER_REGISTRY_USER/$BITBUCKET_REPO_SLUG
+    #         - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+    #         - docker build -t $DOCKER_IMAGE .
+    #         - docker push $DOCKER_IMAGE
+    #       services:
+    #         - docker
+    #       caches:
+    #         - docker
+    #   - step:
+    #       name: Deploy to production
+    #       deployment: production
+    #       trigger: manual
+    #       script:
+    #         - apt update && apt install git openssh-client -y
+    #         - export DOCKER_IMAGE=$DOCKER_REGISTRY_USER/$BITBUCKET_REPO_SLUG
+    #         - export DOCKER_CONTAINER=$BITBUCKET_REPO_SLUG
+    #         - git clone git@bitbucket.org:namtech/$BITBUCKET_REPO_SLUG-config.git &&
+    #           scp $BITBUCKET_REPO_SLUG-config/$BITBUCKET_REPO_SLUG/.env.prod $REMOTE_USER@$REMOTE_ADDRESS:~/.env &&
+    #           rm -rf $BITBUCKET_REPO_SLUG-config
+    #         - ssh $REMOTE_USER@$REMOTE_ADDRESS "
+    #           docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD &&
+    #           docker pull $DOCKER_IMAGE &&
+    #           (docker network ls|grep webnet >/dev/null 2>&1 || docker network create --driver bridge webnet) &&
+    #           (docker stop $DOCKER_CONTAINER || true) && (docker rm $DOCKER_CONTAINER || true) &&
+    #           docker run -d --name $DOCKER_CONTAINER --env-file .env -v $UPLOAD_DIR:/var/www/html/wp-content/uploads --restart=always --log-opt max-size=10m --network=webnet $DOCKER_IMAGE &&
+    #           rm .env &&
+    #           docker system prune -f &&
+    #           exit;"
+    #         - ssh $REMOTE_USER@$REMOTE_ADDRESS "docker exec -i $DOCKER_CONTAINER /src/healthcheck-pipeline.sh && exit;"

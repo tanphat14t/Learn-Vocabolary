@@ -1,0 +1,49 @@
+#download {
+    padding: 125px 35px 80px;
+
+    .post {
+        padding: 50px 0;
+        .box-image {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        }
+
+        .box-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+
+            .content-bottom {
+                .btn-download {
+                    background-color: black;
+                    width: max-content;
+                    padding: 12px 24px;
+                    gap: 8px;
+                    border-radius: 32px;
+
+                    span {
+                        color: white;
+                    }
+
+                    svg {
+                        width: 24px;
+                        height: 24px;
+
+                        path {
+                            fill: white;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}

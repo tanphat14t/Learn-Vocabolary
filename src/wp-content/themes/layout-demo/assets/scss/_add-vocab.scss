@@ -1,0 +1,132 @@
+#add-vocablaries {
+    .form-add-vocablaries {
+        padding: 140px 0 100px;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+
+        form#add-vocab {
+            background-color: #FFFFFF33;
+            width: 100%;
+            padding: 74px 80px;
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+
+            .form-title {
+                font-size: 40px;
+                line-height: 48px;
+                font-weight: 700;
+                color: white;
+                text-transform: uppercase;
+                text-align: center;
+                margin-bottom: 46px;
+            }
+
+            .form-group {
+                margin-bottom: 24px;
+
+                label {
+                    font-size: 24px;
+                    line-height: 29px;
+                    font-weight: 700;
+                    color: white;
+                    margin-bottom: 8px;
+                }
+
+                select,
+                input {
+                    border-radius: 24px;
+                    border: 1px solid black;
+                    height: 50px;
+                    font-size: 18px;
+                    line-height: 22px;
+                    font-weight: 400;
+                    color: #000000;
+                    padding: 0 24px;
+
+                    &::placeholder {
+                        color: #000000;
+                    }
+                }
+            }
+
+            button[type=submit] {
+                background-color: #92D50A;
+                width: max-content;
+                min-width: 164px;
+                height: 54px;
+                border-radius: 16px;
+                border: 1px solid #92D50A;
+                font-size: 16px;
+                line-height: 24px;
+                font-weight: 700;
+                color: black;
+                text-transform: uppercase;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 46px auto 0;
+                transition: all 0.4s;
+
+                &:hover {
+                    color: #92D50A;
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+}
+
+#check-vocablaries,
+#vocablaries {
+    padding: 120px 0 100px;
+
+    th,
+    td {
+        text-align: center;
+
+        &.hidden-vocab {
+            input {
+                border: 0;
+                box-shadow: none !important;
+                width: 160px;
+                outline: none;
+                position: relative;
+                background-repeat: no-repeat;
+                background-repeat: no-repeat;
+                background-size: 10px auto;
+                background-position: 100% 30%;
+
+                &.is-true {
+                    color: green;
+                    background-image: url('../imgs/icons/ic-true.svg');
+                }
+
+                &.is-false {
+                    color: red;
+                    border-bottom: 1px solid red;
+                    background-image: url('../imgs/icons/ic-false.svg');
+                }
+            }
+        }
+
+        &.phonetic {
+
+            span {
+                opacity: 0;
+                transition: all 0.4s;
+            }
+
+            &.is-show {
+                span {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}
+
+.modal{
+    z-index: 10000 !important;
+}
