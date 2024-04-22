@@ -74,14 +74,12 @@ add_action('wp_ajax_nopriv_next_vocab', 'next_vocab');
 
 function next_vocab()
 {
-    $offset = $_POST['offset'] ?? '';
     $vocabularies = get_posts(array(
         'post_type' => 'vocabularies',
         'posts_per_page' => 10,
         'post_status' => 'publish',
         'orderby' => "rand",
         'order' => 'ASC',
-        'offset' => $offset
     )); ?>
     <?php foreach ($vocabularies as $key => $vocabulary) : ?>
         <?php
@@ -104,6 +102,7 @@ function next_vocab()
             <td class="phonetic"><span><?php echo $phonetic; ?></span></td>
             <td><?php echo $type ?></td>
             <td><?php echo $mean ?></td>
+            <td class="answer"><a href="" class="show-answer" data-vocab="<?php echo ucwords(get_the_title($vocab_id)) ?>">Show</a></td>
             <td><a href="" class="check-vocab">Check</a></td>
         </tr>
     <?php endforeach ?>
@@ -123,13 +122,9 @@ function search_vocab()
         'orderby'        => 'title',
         'order'          => 'ASC',
         's'              => $key,
-
     );
     $count = 0;
     $vocabularies = new WP_Query($args);
-    // echo '<pre>';
-    // var_dump($vocabularies);
-    // echo '</pre>';
     if ($vocabularies->have_posts()) {
         while ($vocabularies->have_posts()) {
             $vocabularies->the_post(); ?>
@@ -147,13 +142,13 @@ function search_vocab()
             ?>
             <tr>
                 <th scope="row"><?php echo $count + 1 ?></th>
-                <td><?php echo ucwords(get_the_title($vocab_id)) ?></td>
-                <td><?php echo $phonetic; ?></td>
-                <td><?php echo $type ?></td>
-                <td><?php echo $mean ?></td>
+                <td class="vocab"><?php echo ucwords(get_the_title($vocab_id)) ?></td>
+                <td class="phonetic"><?php echo $phonetic; ?></td>
+                <td class="type"><?php echo $type ?></td>
+                <td class="mean"><?php echo $mean ?></td>
                 <td>
                     <a href="" data-id="<?php echo $vocab_id ?>" class="delete">delete</a>
-                    <a href="" data-id="<?php echo $vocab_id ?>" class="edit">edit</a>
+                    <a href="" data-id="<?php echo $vocab_id ?>" class="show-popup-edit">edit</a>
                 </td>
             </tr>
             <?php $count++; ?>
@@ -182,6 +177,7 @@ function delete_vocab()
     }
     $args = array(
         'post_type'      => 'vocabularies',
+        'posts_per_page' => -1,
         'post_status'    => 'publish',
         'orderby'        => 'title',
         'order'          => 'ASC',
@@ -199,6 +195,8 @@ function delete_vocab()
             $phonetic = get_field('phonetic', $vocab_id);
             $type = "";
             $mean = get_field('vietnamese_meaning', $vocab_id);
+            $word_type_id = get_post_term_id($vocab_id, 'word_type');
+
             $word_types = wp_get_post_terms($vocab_id, 'word_type', array('fields' => 'names'));
 
             foreach ($word_types as $word_type) {
@@ -208,13 +206,92 @@ function delete_vocab()
             ?>
             <tr>
                 <th scope="row"><?php echo $count + 1 ?></th>
-                <td><?php echo ucwords(get_the_title($vocab_id)) ?></td>
-                <td><?php echo $phonetic; ?></td>
-                <td><?php echo $type ?></td>
-                <td><?php echo $mean ?></td>
+                <td class="vocab"><?php echo ucwords(get_the_title($vocab_id)) ?></td>
+                <td class="phonetic"><?php echo $phonetic; ?></td>
+                <td class="type" id="<?php echo $word_type_id ?>"><?php echo $type ?></td>
+                <td class="mean"><?php echo $mean ?></td>
                 <td>
                     <a href="" data-id="<?php echo $vocab_id ?>" class="delete">delete</a>
-                    <a href="" data-id="<?php echo $vocab_id ?>" class="edit">edit</a>
+                    <a href="" data-id="<?php echo $vocab_id ?>" class="show-popup-edit">edit</a>
+                </td>
+            </tr>
+            <?php $count++; ?>
+    <?php }
+        wp_reset_postdata();
+    } else {
+        echo 'No result.';
+    }
+    ?>
+
+    <?php
+    wp_reset_postdata();
+    wp_die();
+}
+add_action('wp_ajax_update_vocab', 'update_vocab');
+add_action('wp_ajax_nopriv_update_vocab', 'update_vocab');
+
+function update_vocab()
+{
+    $idVocab = isset($_POST['idVocab']) ? $_POST['idVocab'] : '';
+    $vocab = isset($_POST['vocab']) ? $_POST['vocab'] : '';
+    $phonetic = isset($_POST['phonetic']) ? $_POST['phonetic'] : '';
+    $type = isset($_POST['type']) ? $_POST['type'] : '';
+    $mean = isset($_POST['mean']) ? $_POST['mean'] : '';
+
+    if ($vocab && $idVocab) {
+        $post_data = array(
+            'ID' => $idVocab,
+            'post_name' => sanitize_title($vocab),
+            'post_title' => $vocab,
+        );
+        wp_update_post($post_data);
+    }
+
+    if ($type && $idVocab) {
+        add_taxonomy_function($idVocab, $type, 'word_type');
+    }
+
+    if ($phonetic && $idVocab) {
+        update_field('phonetic', $phonetic, $idVocab);
+    }
+
+    if ($mean && $idVocab) {
+        update_field('vietnamese_meaning', $mean, $idVocab);
+    }
+    $args = array(
+        'post_type' => 'vocabularies',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'orderby' => "title",
+        'order' => 'ASC',
+    );
+    $count = 0;
+    $vocabularies = new WP_Query($args);
+    if ($vocabularies->have_posts()) {
+        while ($vocabularies->have_posts()) {
+            $vocabularies->the_post(); ?>
+            <?php
+            $vocab_id = get_the_ID();
+            $phonetic = get_field('phonetic', $vocab_id);
+            $type = "";
+            $mean = get_field('vietnamese_meaning', $vocab_id);
+            $word_types = wp_get_post_terms($vocab_id, 'word_type', array('fields' => 'names'));
+            $word_type_id = get_post_term_id($vocab_id, 'word_type');
+
+            foreach ($word_types as $word_type) {
+                $type = $word_type;
+                break;
+            }
+            ?>
+            <tr>
+                <th scope="row"><?php echo $count + 1 ?></th>
+                <td class="vocab"><?php echo ucwords(get_the_title($vocab_id)) ?></td>
+                <td class="phonetic"><?php echo $phonetic; ?></td>
+                <td class="type" id="<?php echo $word_type_id ?>"><?php echo $type ?></td>
+                <td class="mean"><?php echo $mean ?></td>
+                <td>
+                    <a href="" data-id="<?php echo $vocab_id ?>" class="delete">delete</a>
+                    <a href="" data-id="<?php echo $vocab_id ?>" class="show-popup-edit">edit</a>
                 </td>
             </tr>
             <?php $count++; ?>
@@ -228,6 +305,7 @@ function delete_vocab()
 <?php
     wp_reset_postdata();
     wp_die();
+    wp_send_json_success('Vocabulary updated successfully');
 }
 
 function add_taxonomy_function($post_id, $term_name, $tax)
@@ -245,7 +323,7 @@ function add_taxonomy_function($post_id, $term_name, $tax)
 
             if (!is_wp_error($term)) {
 
-                // wp_set_object_terms($post_id, null, $term_data['taxonomy']);
+                wp_set_object_terms($post_id, null, $term_data['taxonomy']);
 
                 wp_set_object_terms($post_id, $term['term_id'], $term_data['taxonomy'], true);
             } else {
@@ -286,4 +364,16 @@ function get_all_name_and_wordtype()
 
 
     return $vocabularies_info;
+}
+
+function get_post_term_id($post_id, $taxonomy)
+{
+    $terms = wp_get_post_terms($post_id, $taxonomy);
+
+    if (!empty($terms) && !is_wp_error($terms)) {
+        $term_id = $terms[0]->term_id;
+        return $term_id;
+    } else {
+        return false;
+    }
 }

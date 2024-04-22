@@ -45,7 +45,7 @@
                                 $type = "";
                                 $mean = get_field('vietnamese_meaning', $vocab_id);
                                 $word_types = wp_get_post_terms($vocab_id, 'word_type', array('fields' => 'names'));
-
+                                $word_type_id = get_post_term_id($vocab_id, 'word_type');
                                 foreach ($word_types as $word_type) {
                                     $type = $word_type;
                                     break;
@@ -53,10 +53,10 @@
                                 ?>
                                 <tr>
                                     <th scope="row"><?php echo $key + 1 ?></th>
-                                    <td><?php echo ucwords(get_the_title($vocab_id)) ?></td>
-                                    <td><?php echo $phonetic; ?></td>
-                                    <td><?php echo $type ?></td>
-                                    <td><?php echo $mean ?></td>
+                                    <td class="vocab"><?php echo ucwords(get_the_title($vocab_id)) ?></td>
+                                    <td class="phonetic"><?php echo $phonetic; ?></td>
+                                    <td class="type" id="<?php echo $word_type_id ?>"><?php echo $type ?></td>
+                                    <td class="mean"><?php echo $mean ?></td>
                                     <td>
                                         <a href="" data-id="<?php echo $vocab_id ?>" class="delete">delete</a>
                                         <a href="" data-id="<?php echo $vocab_id ?>" class="show-popup-edit">edit</a>
